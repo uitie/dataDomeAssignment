@@ -4,9 +4,16 @@
   "description": "Receives http requests to /cart endpoint.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "jest"
   },
-  "author": "",
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  },
+  "author": "Konstantin Hamilton",
   "license": "ISC",
   "devDependencies": {
     "jest": "^28.1.1",
