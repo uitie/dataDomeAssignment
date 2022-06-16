@@ -1,7 +1,6 @@
-const http = require("http");
-const host = 'localhost';
-const port = 8000;
-
+const http = require('http');
+const host = process.env.HOST || '0.0.0.0';
+const port = process.env.PORT || 8000;
 //event listener
 const requestListener = function (req, res) {
     res.writeHead(200);
