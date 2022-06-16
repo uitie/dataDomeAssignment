@@ -1,8 +1,9 @@
 const http = require('http');
 const host = process.env.HOST || '0.0.0.0';
 const port = process.env.PORT || 8000;
+
 //event listener
-const requestListener = function (req, res) {
+const requestListener = (req, res) {
     res.writeHead(200);
     res.end("My first server!");
 };
