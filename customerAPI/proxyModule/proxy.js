@@ -1,22 +1,22 @@
 /* eslint-disable no-console */
 const net = require('net');
 
-const proxyPort = 8080; // OS will assign random unused port
-const proxyHost =/*  'localhost' || */ '0.0.0.0';
+const proxyPort = 8080; // OS will assign random unused port if value === 0
+const proxyHost = /* 'localhost' || */ '0.0.0.0';
 const server = net.createServer();
 
 server.on('connection', (clientToProxySocket) => {
-  console.log('Connected to proxy');
+  console.log('Client is connected to proxy');
 
   clientToProxySocket.once('data', (data) => {
-    const serverPort = 80;
-    // Filter address info from request
-    const serverAddress = data
-      .toString()
-      .split('Host: ')[1]
-      .split('\r\n')[0];
+    console.log(data.toString());
 
-    console.log(serverAddress);
+    // Filter address info from request
+    const serverAddress = data.toString().split('Host: ')[1].split(':')[0];
+    const serverPort = data.toString().split(':')[2].split('\n')[0];
+
+    console.log('Server address is:', serverAddress);
+    console.log('Server port is:', serverPort);
 
     // Create connection to destination server
     const proxyToServerSocket = net.createConnection({
@@ -53,5 +53,5 @@ server.on('close', () => {
 });
 
 server.listen(proxyPort, proxyHost, () => {
-  console.log(`Proxy server listening at http://${proxyHost}:${/* server.address(). */proxyPort}`);
+  console.log(`Proxy server listening at http://${proxyHost}:${proxyPort}`);
 });
