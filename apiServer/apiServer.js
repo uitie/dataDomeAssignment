@@ -4,10 +4,29 @@ const apiKey = 'password';
 const host = 'localhost';
 const port = 9000;
 
+// create http server
+const server = http.createServer();
+
+//request validation
+const validate = ((req, res) => {
+    if(req.socket.localAddress === '::1'
+        && req.method === 'GET'
+        && req.headers['user-agent'].indexOf('Postman') !== -1
+    ){
+        res.setHeader('req-validation-status', 'valid');
+    } else {
+        res.setHeader('req-validation-status', 'blocked');
+    }
+});
+
 // event listener
-const requestListener = ((req, res) => {
+server.on('request', (req, res) => {
     console.log(req.headers);
+
+    //authentication
     if(req.headers.modulekey == apiKey){
+        console.log(req.socket.localAddress, req.method);
+        validate(req, res);
         res.writeHead(200);
         res.end('This is the API Server\n');
     } else {
@@ -16,9 +35,6 @@ const requestListener = ((req, res) => {
     }
     
 });
-
-// create http server
-const server = http.createServer(requestListener);
 
 server.on('error', (err) => {
     console.log('API Server error');
