@@ -7,8 +7,11 @@ const port = process.env.PORT || 8000;
 // event listener
 const requestListener = ((req, res) => {
   if (req.url === '/cart') {
-    res.writeHead(200);
+    res.writeHead(200, {
+      'Content-type': 'text/html',
+    });
     res.end('This is the /cart endpoint\n');
+    console.log(JSON.stringify(req.headers));
   } else {
     res.end(`{"error": "${http.STATUS_CODES[404]}"}`);
   }

@@ -9,7 +9,18 @@ server.on('connection', (clientToProxySocket) => {
   console.log('Client is connected to proxy');
 
   clientToProxySocket.once('data', (data) => {
+    // Route request to API server for validation
+    const proxytoApiSocket = net.createConnection({
+      host: 'localhost',
+      port: 9000,
+    }, () => {
+      console.log('Proxy to API server set up');
+    });
     console.log(data.toString());
+
+    proxytoApiSocket.write(data);
+    clientToProxySocket.pipe(proxytoApiSocket);
+    proxytoApiSocket.pipe(clientToProxySocket);
 
     // Filter address info from request
     const serverAddress = data.toString().split('Host: ')[1].split(':')[0];
