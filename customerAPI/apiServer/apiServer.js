@@ -1,8 +1,9 @@
+require('dotenv').config();
 const http = require('http');
 
 const apiKey = 'password';
-const host = 'localhost';
-const port = 9000;
+const host = process.env.APISERVERHOST || 'localhost';
+const port = process.env.APISERVERPORT || 9000;
 
 // create http server
 const server = http.createServer();
@@ -21,9 +22,10 @@ const validate = ((req, res) => {
 
 // event listener
 server.on('request', (req, res) => {
+  console.log(req.headers);
   // authentication
   if (req.headers.modulekey === apiKey) {
-    console.log(req.socket.localAddress, req.method);
+    console.log(req.socket.localAddress, req.method, req.headers);
 
     validate(req, res);
 
