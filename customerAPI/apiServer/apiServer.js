@@ -11,7 +11,7 @@ const server = http.createServer();
 // request validation
 const validate = ((req, res) => {
   if (req.socket.localAddress === '::1'
-        && req.method === ('POST')
+        && req.method === ('GET')
         && req.headers['user-agent'].indexOf('curl') !== -1
   ) {
     res.setHeader('req-validation-status', 'valid');

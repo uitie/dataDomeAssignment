@@ -11,39 +11,6 @@ const apiServerPort = process.env.APISERVERPORT || 9000;
 
 const server = net.createServer();
 
-// Modify original request before validation
-/* const editClientRequest = async (clientReq, destServerAddress, destServerPort) => {
-  console.log('@@@@@@@@\n', JSON.stringify(String.fromCharCode(...clientReq.toJSON().data)), '\n');
-  let modifiedReq = {};
-  const regex = /\r\n|\s/g;
-  let clientReqBuf = clientReq.toJSON().data;
-  clientReqBuf = String.fromCharCode(...clientReqBuf);
-  clientReqBuf = clientReqBuf.toString().slice(clientReq.indexOf('Host: '), clientReq.lastIndexOf('\r\n') - 2);
-  clientReqBuf = clientReqBuf.replaceAll(regex, '"'); 
-  clientReqBuf = clientReqBuf.split(/\r\n|:\s/);
-
-  let reqHeaderObj = {};
-  for (let i = 0; i < clientReqBuf.length; i += 2) {
-    const tempStr = clientReqBuf[i + 1];
-    reqHeaderObj[clientReqBuf[i]] = tempStr;
-  }
-  reqHeaderObj = (JSON.stringify(reqHeaderObj));
-
-  const clientReqHeaders = clientReq.toString().slice(clientReq.indexOf('Host: '), clientReq.lastIndexOf('\r\n') - 1);
-  const crequest = http.request('http://localhost', JSON.stringify(clientReq));
-
-  crequest.setHeader('port', parseInt(destServerPort, 10));
-  for (let i = 2; i < clientReqBuf.length; i += 2) {
-    crequest.setHeader(clientReqBuf[i], clientReqBuf[i + 1].toString());
-  }
-  crequest.setHeader('modulekey', 'password');
-  crequest.write(clientReq);
-  crequest.end();
-  modifiedReq = JSON.parse(JSON.stringify(crequest));
-
-  return modifiedReq;
-}; */
-
 server.on('connection', (clientToProxySocket) => {
   console.log('Client is connected to proxy');
 
@@ -75,12 +42,10 @@ server.on('connection', (clientToProxySocket) => {
     console.log(`----\n${data.toString().slice(0, data.lastIndexOf('\r\n\r\n'))}\n----`);
     await fs.appendFile('log.txt', `${reqHash}\nTime received: ${new Date().getTime()}\nTime completed: `, (err) => {
       if (err) throw err;
-      console.log('Log updated!');
     });
 
     // Write orig req data to socket
     try {
-      console.log('TEST\n\n');
       proxyToApiSocket.write(data);
       clientToProxySocket.pipe(proxyToApiSocket);
     } catch (error) {
@@ -101,8 +66,6 @@ server.on('connection', (clientToProxySocket) => {
 
       // Check if request was validated
       if (validityStatus === 'valid') {
-        // console.log(data.toString());
-
         proxyToServerSocket.write(data);
         proxyToServerSocket.pipe(clientToProxySocket);
         clientToProxySocket.pipe(proxyToServerSocket);
@@ -114,7 +77,6 @@ server.on('connection', (clientToProxySocket) => {
       }
       fs.appendFile('log.txt', `${new Date().getTime()}\n\n`, (err) => {
         if (err) throw err;
-        console.log('Log updated!');
       });
       console.log(responseData.toString(), '\n');
     });
@@ -147,3 +109,37 @@ server.on('close', () => {
 server.listen(proxyPort, proxyHost, () => {
   console.log(`Proxy server listening at http://${proxyHost}:${proxyPort}`);
 });
+
+
+// Modify original request before validation
+/* const editClientRequest = async (clientReq, destServerAddress, destServerPort) => {
+  console.log('@@@@@@@@\n', JSON.stringify(String.fromCharCode(...clientReq.toJSON().data)), '\n');
+  let modifiedReq = {};
+  const regex = /\r\n|\s/g;
+  let clientReqBuf = clientReq.toJSON().data;
+  clientReqBuf = String.fromCharCode(...clientReqBuf);
+  clientReqBuf = clientReqBuf.toString().slice(clientReq.indexOf('Host: '), clientReq.lastIndexOf('\r\n') - 2);
+  clientReqBuf = clientReqBuf.replaceAll(regex, '"'); 
+  clientReqBuf = clientReqBuf.split(/\r\n|:\s/);
+
+  let reqHeaderObj = {};
+  for (let i = 0; i < clientReqBuf.length; i += 2) {
+    const tempStr = clientReqBuf[i + 1];
+    reqHeaderObj[clientReqBuf[i]] = tempStr;
+  }
+  reqHeaderObj = (JSON.stringify(reqHeaderObj));
+
+  const clientReqHeaders = clientReq.toString().slice(clientReq.indexOf('Host: '), clientReq.lastIndexOf('\r\n') - 1);
+  const crequest = http.request('http://localhost', JSON.stringify(clientReq));
+
+  crequest.setHeader('port', parseInt(destServerPort, 10));
+  for (let i = 2; i < clientReqBuf.length; i += 2) {
+    crequest.setHeader(clientReqBuf[i], clientReqBuf[i + 1].toString());
+  }
+  crequest.setHeader('modulekey', 'password');
+  crequest.write(clientReq);
+  crequest.end();
+  modifiedReq = JSON.parse(JSON.stringify(crequest));
+
+  return modifiedReq;
+}; */
