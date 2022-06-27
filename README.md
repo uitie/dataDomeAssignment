@@ -8,8 +8,8 @@
 ## Instructions
 
 1. Fork or clone this repo to your local machine.
-2. Navigate to repo root on local machine and issue `npm i` command.
-3. Open a new terminal, navigate to repo root and issue `npm run start` command.
+2. Navigate to */customerAPI* folder of repo on local machine and issue `npm i` command.
+3. Issue `npm run start` command.
 4. In another terminal , navigate to */proxyModule* folder of repo and issue `node proxy.js` command.
 5. In a third terminal, navigate to */apiServer* folder and issue `node apiServer.js` command.
 6. In a new terminal window, send a request to the */cart* endpoint on the Customer API server via:
