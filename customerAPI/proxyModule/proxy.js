@@ -2,6 +2,8 @@
 require('dotenv').config();
 const net = require('net');
 const http = require('http');
+const fs = require('fs').promises;
+const crypto = require('crypto');
 
 const proxyPort = process.env.PROXYPORT || 8080; // OS will assign random unused port if value === 0
 const proxyHost = process.env.PROXYHOST || '0.0.0.0';
@@ -10,16 +12,15 @@ const apiServerPort = process.env.APISERVERPORT || 9000;
 const server = net.createServer();
 
 // Modify original request before validation
-const editClientRequest = async (clientReq, destServerAddress, destServerPort) => {
+/* const editClientRequest = async (clientReq, destServerAddress, destServerPort) => {
+  console.log('@@@@@@@@\n', JSON.stringify(String.fromCharCode(...clientReq.toJSON().data)), '\n');
   let modifiedReq = {};
-
   const regex = /\r\n|\s/g;
   let clientReqBuf = clientReq.toJSON().data;
   clientReqBuf = String.fromCharCode(...clientReqBuf);
   clientReqBuf = clientReqBuf.toString().slice(clientReq.indexOf('Host: '), clientReq.lastIndexOf('\r\n') - 2);
-  /* clientReqBuf = clientReqBuf.replaceAll(regex, '"');  */
+  clientReqBuf = clientReqBuf.replaceAll(regex, '"'); 
   clientReqBuf = clientReqBuf.split(/\r\n|:\s/);
-  console.log(clientReqBuf);
 
   let reqHeaderObj = {};
   for (let i = 0; i < clientReqBuf.length; i += 2) {
@@ -29,26 +30,19 @@ const editClientRequest = async (clientReq, destServerAddress, destServerPort) =
   reqHeaderObj = (JSON.stringify(reqHeaderObj));
 
   const clientReqHeaders = clientReq.toString().slice(clientReq.indexOf('Host: '), clientReq.lastIndexOf('\r\n') - 1);
-  console.log(JSON.parse(reqHeaderObj), '\n---\n', JSON.stringify(clientReqHeaders));
+  const crequest = http.request('http://localhost', JSON.stringify(clientReq));
 
-  const crequest = http.request({
-    host: destServerAddress,
-    port: 8000,
-    path: '/cart',
-    method: 'GET',
-    headers: {},
-  });
-  //crequest.setHeader('port', parseInt(destServerPort, 10));
+  crequest.setHeader('port', parseInt(destServerPort, 10));
   for (let i = 2; i < clientReqBuf.length; i += 2) {
     crequest.setHeader(clientReqBuf[i], clientReqBuf[i + 1].toString());
   }
   crequest.setHeader('modulekey', 'password');
+  crequest.write(clientReq);
+  crequest.end();
+  modifiedReq = JSON.parse(JSON.stringify(crequest));
 
-  modifiedReq = JSON.parse(JSON.stringify(crequest.end()));
-
-  console.log('******************\n', modifiedReq);
   return modifiedReq;
-};
+}; */
 
 server.on('connection', (clientToProxySocket) => {
   console.log('Client is connected to proxy');
@@ -75,11 +69,23 @@ server.on('connection', (clientToProxySocket) => {
       console.log('Proxy to Destination server set up');
     });
 
+    // Performance logging
+    let reqMinusBody = data.slice(0, data.lastIndexOf('\r\n\r\n'));
+    let reqHash = crypto.createHash('md5', reqMinusBody).digest('base64');
+    console.log(`----\n${data.toString().slice(0, data.lastIndexOf('\r\n\r\n'))}\n----`);
+    await fs.appendFile('log.txt', `${reqHash}\nTime received: ${new Date().getTime()}\nTime completed: `, (err) => {
+      if (err) throw err;
+      console.log('Log updated!');
+    });
+
     // Write orig req data to socket
-    //const modReq = await editClientRequest(data, destServerAddress, destServerPort);
-    //console.log(JSON.stringify(modReq));
-    proxyToApiSocket.write(data);
-    clientToProxySocket.pipe(proxyToApiSocket);
+    try {
+      console.log('TEST\n\n');
+      proxyToApiSocket.write(data);
+      clientToProxySocket.pipe(proxyToApiSocket);
+    } catch (error) {
+      console.error(error);
+    }
 
     // Send final response to client
     proxyToApiSocket.on('data', (responseData) => {
@@ -91,7 +97,6 @@ server.on('connection', (clientToProxySocket) => {
       testBuf.write(testHeader, Buffer.byteLength(data) - Buffer.byteLength('\r\n'));
       testBuf.write('\r\n', 143);
       console.log(JSON.stringify(testBuf.toString()), '-----'); */
-      console.log(responseData.toString());
       const validityStatus = responseData.toString().split('req-validation-status: ')[1].split('\r\n')[0];
 
       // Check if request was validated
@@ -107,6 +112,10 @@ server.on('connection', (clientToProxySocket) => {
         clientToProxySocket.write(data);
         clientToProxySocket.end();
       }
+      fs.appendFile('log.txt', `${new Date().getTime()}\n\n`, (err) => {
+        if (err) throw err;
+        console.log('Log updated!');
+      });
       console.log(responseData.toString(), '\n');
     });
 

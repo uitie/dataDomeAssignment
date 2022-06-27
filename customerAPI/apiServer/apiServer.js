@@ -11,7 +11,7 @@ const server = http.createServer();
 // request validation
 const validate = ((req, res) => {
   if (req.socket.localAddress === '::1'
-        && req.method === 'GET'
+        && req.method === ('POST')
         && req.headers['user-agent'].indexOf('curl') !== -1
   ) {
     res.setHeader('req-validation-status', 'valid');
@@ -29,7 +29,7 @@ server.on('request', (req, res) => {
 
     validate(req, res);
 
-    res.setHeader('Content-type', 'text/html');
+    res.setHeader('Content-type', 'application/json');
     res.statusCode = 302;
     res.end('This is the API Server\n');
   } else {
